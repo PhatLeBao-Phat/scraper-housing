@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import re
 import multiprocessing
+import requests
 
 # Parse the listings
 def _search_str_property(listing):
@@ -21,6 +22,7 @@ def _search_str_property(listing):
     location = location_match.group(1).strip() if location_match else None
 
     return (size, property_type, location)
+
 
 def parse_listing_html(li_element : str) -> Tuple[str, int]:
     bs4_html = BeautifulSoup(li_element.get_attribute("outerHTML"), 'html.parser')
@@ -68,6 +70,26 @@ def get_listings(url, visited, final, base_url='https://www.housingtarget.com'):
             # Handle exception if necessary
             print(f"Cannot visit {link}")
     return r
+
+
+def get_listing_attr(url):
+    try:
+        page = requests.get(url, timeout=10)
+        page.raise_for_status()
+    except requests.RequestException as e:
+        print(f"Error fetching {url}: {e}")
+        return None, None, None, None
+
+    soup = BeautifulSoup(page.content, "html.parser")
+
+    html = soup.find("div", class_="top-info-mobile") 
+    
+    title = html.findChild("h1").text
+    street = html.findChild("strong").text
+    description = soup.find_all("div", {"class" : "desc"})[0].text
+    seo = soup.find_all("div", {"class" : "seo"})[0].text
+
+    return title, street, description, seo
 
 
 def listing_spider(root_url, base_url='https://www.housingtarget.com'):
