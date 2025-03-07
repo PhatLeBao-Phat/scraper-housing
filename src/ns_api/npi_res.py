@@ -714,6 +714,24 @@ class Trip(BaseObject):
         )
 
 
+class Place(BaseObject):
+    """
+    Information on NS Places. NS Place is a group of NS locations 
+    e.g. stations, parking, station facilities, ...
+    """
+    def __init__(self, stat_dict=None):
+        if stat_dict is None:
+            return
+        self.type = stat_dict["type"]
+        self.name = stat_dict["name"]
+        self.identifiers = stat_dict["identifiers"]
+        self.locations = stat_dict["locations"]
+        self.open = stat_dict["open"]
+        
+    def __str__(self):
+        return '<Place> {0} {1}'.format(self.type, self.name)
+
+
 class NSAPI:
     """
     NS API object
@@ -968,3 +986,38 @@ class NSAPI:
         url = '/reisinformatie-api/api/v2/stations?%s' % params
         raw_stations = self._request('GET', url)
         return self.parse_stations(raw_stations)
+    
+    def get_places(
+        self,
+        q : str, 
+        lang : str = 'nl',
+    ):
+        """
+        Fetch list of places 
+        """
+        params = urllib.parse.urlencode({
+            # 'lat': '{string}',
+            # 'lng': '{string}',
+            # 'type': '{array}',
+            # 'type[]': '{array}',
+            # 'orderby': '{array}',
+            # 'limit': '{integer}',
+            # 'radius': '{integer}',
+            'lang': lang,
+            'q': q,
+            # 'screen-density': '{string}',
+            # 'details': '{boolean}',
+            # 'station_code': '{string}',
+            # 'name': '{string}',
+            # 'view': '{string}',
+            # 'platforms': '{array}',
+            # 'identifier': '{array}',
+            # 'moment': '{string}',
+            # 'countries': '{string}'
+        })
+
+        url = 'https://gateway.apiportal.ns.nl/places-api/v2/places' % params 
+
+        raw_places = self._request('GET', url)
+        return Place(raw_places)
+        
