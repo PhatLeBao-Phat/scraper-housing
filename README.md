@@ -18,3 +18,5 @@ scraper-housing/
 function to pull places/stations/etc... based on the query and country 
 -> return object of all kinds?
 -> TODO: Write `get_places` function in ns api
+
+Dafukkkkk
