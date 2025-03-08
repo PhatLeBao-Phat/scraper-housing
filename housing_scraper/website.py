@@ -51,26 +51,35 @@ class HousingTargetWebsite(Website):
 
         return webdriver.Chrome(options=chrome_options)
 
-    @staticmethod
-    def fetch_listing_details(url: str, session : requests.Session) -> Tuple[Optional[str], Optional[str], Optional[str], Optional[str]]:
-        """Extract title, street, description, and SEO text from a listing page url."""
-        # GET request page content
+    def fetch_listing_details(self, url: str, session=None) -> Tuple[Optional[str], Optional[str], Optional[str], Optional[str]]:
+        """Extract title, street, description, and SEO text from a listing page URL using Selenium."""
         try:
-            page = session.get(url, timeout=10)
-            page.raise_for_status()
-        except requests.RequestException as e:
-            logging.error(f"Error fetching {url}: {e}")
+            # Use Selenium's driver to fetch the page content
+            self.alter_driver.get(url)
+            
+            # Optionally wait for the page to load (wait for any specific element to appear)
+            WebDriverWait(self.alter_driver, 10).until(
+                EC.presence_of_element_located((By.CLASS_NAME, "top-info-mobile"))
+            )
+
+            # Extract title, street, description, and SEO using Selenium
+            title_element = self.alter_driver.find_element(By.CSS_SELECTOR, "div.top-info-mobile h1")
+            title = title_element.text.strip() if title_element else None
+
+            street_element = self.alter_driver.find_element(By.CSS_SELECTOR, "div.top-info-mobile strong")
+            street = street_element.text.strip() if street_element else None
+
+            description_element = self.alter_driver.find_element(By.CSS_SELECTOR, "div.desc")
+            description = description_element.text.strip() if description_element else None
+
+            seo_element = self.alter_driver.find_element(By.CSS_SELECTOR, "div.seo")
+            seo = seo_element.text.strip() if seo_element else None
+
+            return title, street, description, seo
+        
+        except Exception as e:
+            logging.error(f"Error fetching {url} with Selenium: {e}")
             return None, None, None, None
-
-        # Parse HTML content
-        soup = BeautifulSoup(page.content, "html.parser")
-        html = soup.find("div", class_="top-info-mobile")
-        title = html.findChild("h1").get_text(strip=True) if html and html.findChild("h1") else None
-        street = html.findChild("strong").get_text(strip=True) if html and html.findChild("strong") else None
-        description = soup.find("div", class_="desc").get_text(strip=True) if soup.find("div", class_="desc") else None
-        seo = soup.find("div", class_="seo").get_text(strip=True) if soup.find("div", class_="seo") else None
-
-        return title, street, description, seo
 
     @staticmethod
     def extract_property_details_from_string(listing: str) -> Tuple[Optional[str], Optional[str], Optional[str]]:
@@ -93,7 +102,7 @@ class HousingTargetWebsite(Website):
         """
         bs4_html = BeautifulSoup(listing_element.get_attribute("outerHTML"), "html.parser")
         link = bs4_html.find("a")["href"]
-        title, street, description, seo = self.fetch_listing_details(self.ROOT_URL + link, self.session)
+        title, street, description, seo = self.fetch_listing_details(self.ROOT_URL + link)
         rent = bs4_html.find("label").parent.find("span").get_text(strip=True)
         size, property_type, location = self.extract_property_details_from_string(bs4_html.find("a").get_text(strip=True))
 
