@@ -32,9 +32,10 @@ class HousingTargetWebsite(Website):
         super().__init__(url)
         if self.ROOT_URL not in self.url:
             raise ValueError(f"Supplemented URL {self.url} is not supported by {self.__class__.__name__}")
-        self.headless = headless
         self.driver = self._initialize_chrome_driver(headless)
-        self.alter_driver = self._initialize_chrome_driver(headless)
+        # self.alter_driver = self._initialize_chrome_driver(headless)
+        self.headless = headless
+        self.session = requests.Session()
 
     def __del__(self):
         """Ensure the browser driver quits on object deletion."""
@@ -54,6 +55,7 @@ class HousingTargetWebsite(Website):
     @staticmethod
     def fetch_listing_details(url: str, session : requests.Session) -> Tuple[Optional[str], Optional[str], Optional[str], Optional[str]]:
         """Extract title, street, description, and SEO text from a listing page url."""
+        logging.info(f"Visiting {url}")
         # GET request page content
         try:
             page = session.get(url, timeout=10)
@@ -92,7 +94,7 @@ class HousingTargetWebsite(Website):
         :return: Listing object
         """
         bs4_html = BeautifulSoup(listing_element.get_attribute("outerHTML"), "html.parser")
-        link = bs4_html.find("a")["href"]
+        link = bs4_html.find("a")["href"] # TODO: add following link
         title, street, description, seo = self.fetch_listing_details(self.ROOT_URL + link, self.session)
         rent = bs4_html.find("label").parent.find("span").get_text(strip=True)
         size, property_type, location = self.extract_property_details_from_string(bs4_html.find("a").get_text(strip=True))
@@ -132,8 +134,8 @@ class HousingTargetWebsite(Website):
             url = q.popleft() 
 
             self._visit_url(url, visited_urls)
+            
             listings = self._parse_listings_from_page()
-
             if listings:
                 return_listings.extend(listings)
 

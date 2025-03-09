@@ -17,4 +17,7 @@ scraper-housing/
 ## 2. Items 
 function to pull places/stations/etc... based on the query and country 
 -> return object of all kinds?
--> TODO: Write `get_places` function in ns api
+-> TODO: 
+- Write `get_places` function in ns api
+- Follow link instead of requesting a new html [1:00]
+- Look into how to do parallelism here [3:00]
