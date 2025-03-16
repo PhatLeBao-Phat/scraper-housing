@@ -11,6 +11,7 @@ from collections import deque
 
 from housing_scraper.housing import Listing
 from housing_scraper.logger import logger as logging
+from housing_scraper.helper import ParallelOfficer
 
 
 class Website:
@@ -33,7 +34,6 @@ class HousingTargetWebsite(Website):
         if self.ROOT_URL not in self.url:
             raise ValueError(f"Supplemented URL {self.url} is not supported by {self.__class__.__name__}")
         self.driver = self._initialize_chrome_driver(headless)
-        # self.alter_driver = self._initialize_chrome_driver(headless)
         self.headless = headless
         self.session = requests.Session()
 
@@ -55,7 +55,7 @@ class HousingTargetWebsite(Website):
     @staticmethod
     def fetch_listing_details(url: str, session : requests.Session) -> Tuple[Optional[str], Optional[str], Optional[str], Optional[str]]:
         """Extract title, street, description, and SEO text from a listing page url."""
-        logging.info(f"Visiting {url}")
+        # logging.info(f"Visiting {url}")
         # GET request page content
         try:
             page = session.get(url, timeout=10)
@@ -150,9 +150,7 @@ class HousingTargetWebsite(Website):
     def _should_skip(self, url: str, visited_urls: set, max_pages: int, q : Deque) -> bool:
         """Checks if a URL should be skipped."""
         if url in visited_urls or len(visited_urls) >= max_pages or url in q:
-            # logging.info(f"Skipping {url} (Already visited or max pages reached)")
             return True
-        # logging.info(f"did not skip {url}")
         return False
 
     def _visit_url(self, url: str, visited_urls: set):
@@ -171,7 +169,11 @@ class HousingTargetWebsite(Website):
             listings = [li for li in li_elements if li.get_attribute("class") == "" and li.find_elements(By.TAG_NAME, "div")]
 
             logging.info(f"Found {len(listings)} listings on the page")
-            return [self.parse_listing_element(li) for li in listings]
+
+            # Parallel threadings 
+            po = ParallelOfficer()
+            return po.process_parallel_list(listings, self.parse_listing_element)    
+
         except Exception as e:
             logging.warning(f"Error parsing listings: {e}")
             return []
@@ -180,7 +182,6 @@ class HousingTargetWebsite(Website):
         """Extracts pagination links from the current page that has not been visited."""
         try:
             pagination_html = BeautifulSoup(self.driver.find_element(By.CLASS_NAME, "pager").get_attribute("outerHTML"), "html.parser")
-            # pagination_links = [self.ROOT_URL + e["href"] for e in pagination_html.find_all("a") if self.ROOT_URL + e["href"] not in visited_urls]
             pagination_links = [self.ROOT_URL + e["href"] for e in pagination_html.find_all("a")]
             logging.info(f"Found {len(pagination_links)} pagination links")
             return pagination_links
