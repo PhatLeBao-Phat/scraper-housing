@@ -28,6 +28,7 @@ class HousingTargetWebsite(Website):
     """Class for HousingTarget website interaction."""
     ROOT_URL = "https://www.housingtarget.com"
 
+
     def __init__(self, url: str, headless: bool = True):
         """Initialize HousingTargetWebsite with URL and headless browser option."""
         super().__init__(url)
@@ -37,10 +38,12 @@ class HousingTargetWebsite(Website):
         self.headless = headless
         self.session = requests.Session()
 
+
     def __del__(self):
         """Ensure the browser driver quits on object deletion."""
         self.driver.quit()
     
+
     @staticmethod
     def _initialize_chrome_driver(headless: bool = True) -> webdriver.Chrome:
         """Configure and return a Chrome WebDriver instance."""
@@ -51,6 +54,7 @@ class HousingTargetWebsite(Website):
             chrome_options.add_argument("--headless=new")
 
         return webdriver.Chrome(options=chrome_options)
+
 
     @staticmethod
     def fetch_listing_details(url: str, session : requests.Session) -> Tuple[Optional[str], Optional[str], Optional[str], Optional[str]]:
@@ -74,6 +78,7 @@ class HousingTargetWebsite(Website):
 
         return title, street, description, seo
 
+
     @staticmethod
     def extract_property_details_from_string(listing: str) -> Tuple[Optional[str], Optional[str], Optional[str]]:
         """Extract size, property type, and location from listing string."""
@@ -87,6 +92,7 @@ class HousingTargetWebsite(Website):
             location.group(1).strip() if location else None
         )
     
+
     def parse_listing_element(self, listing_element: str) -> Listing:
         """Parse HTML list element into a Listing object.
         
@@ -110,6 +116,7 @@ class HousingTargetWebsite(Website):
             description=description,
             seo=seo,
         )
+
 
     def scrape_listings(self, visited_urls: set, return_listings: List[Listing], max_pages: int = 20) -> List[Listing]:
         """
@@ -147,17 +154,20 @@ class HousingTargetWebsite(Website):
 
         return return_listings
 
+
     def _should_skip(self, url: str, visited_urls: set, max_pages: int, q : Deque) -> bool:
         """Checks if a URL should be skipped."""
         if url in visited_urls or len(visited_urls) >= max_pages or url in q:
             return True
         return False
 
+
     def _visit_url(self, url: str, visited_urls: set):
         """Visits the URL and adds it to visited URLs."""
         logging.info(f"Visiting {url}")
         visited_urls.add(url)
         self.driver.get(url)
+
 
     def _parse_listings_from_page(self) -> List[Listing]:
         """Parses listings from the current page."""
@@ -177,6 +187,7 @@ class HousingTargetWebsite(Website):
         except Exception as e:
             logging.warning(f"Error parsing listings: {e}")
             return []
+
 
     def _get_pagination_links(self) -> List[str]:
         """Extracts pagination links from the current page that has not been visited."""
