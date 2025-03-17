@@ -1,0 +1,1 @@
+COOKIE_FILE = "cookies/cookies.pkl"
