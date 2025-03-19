@@ -16,9 +16,7 @@ def setup_teardown():
         max_price=2000
     )
 
-    print(f"Setup scraper: {scraper.__str__()}")  # Correct usage of __str__()
-
-    yield scraper  # Yield scraper object to the test
+    yield scraper 
 
     # Teardown (if necessary)
     print("Teardown")

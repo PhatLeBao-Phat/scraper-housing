@@ -168,11 +168,7 @@ def preprocess_data(
         keep_cols.extend(keep_extra_cols)
 
     # Info
-    try:
-        df["house_id"] = df["url"].apply(lambda x: int(x.split("/")[-2].split("-")[1]))
-    except Exception as e:
-        print(f"Damn this thing sucks and is full of bugs {e}")
-        df["house_id"] = "666"
+    df["house_id"] = df["url"].apply(lambda x: int(x.split("/")[-2].split("-")[1]))
     df["house_type"] = df["url"].apply(lambda x: x.split("/")[-2].split("-")[0])
     df = df[df["house_type"].isin(["appartement", "huis"])]
 
