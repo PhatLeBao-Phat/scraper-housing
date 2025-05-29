@@ -1,1 +1,0 @@
-from funda_scraper.scrape import FundaScraper

@@ -1,4 +1,4 @@
-from housing_scraper import website
+from housing_target_scraper import website
 import cProfile
 import pickle
 
